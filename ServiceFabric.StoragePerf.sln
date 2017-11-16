@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+VisualStudioVersion = 15.0.27004.2008
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceFabric.StoragePerf.Shared", "ServiceFabric.StoragePerf.Shared\ServiceFabric.StoragePerf.Shared.csproj", "{4ADF9A8B-C170-4F6E-A496-4E083D31B3ED}"
 EndProject
@@ -16,6 +16,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceFabric.StoragePerf.CustomerService", "ServiceFabric.StoragePerf.CustomerService\ServiceFabric.StoragePerf.CustomerService.csproj", "{C8B51CF3-A3B8-4BD6-9F14-A90E3D9A0DE7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceFabric.StoragePerf.Harness", "ServiceFabric.StoragePerf.Harness\ServiceFabric.StoragePerf.Harness.csproj", "{509C9F29-FB8F-494E-8845-CAE77F8EE796}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceFabric.StoragePerf.StorageProviders.Combined", "ServiceFabric.StoragePerf.StorageProviders.Combined\ServiceFabric.StoragePerf.StorageProviders.Combined.csproj", "{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +52,7 @@ Global
 		{2A99499D-0C3C-40F1-ABFE-884AD2914AD7}.Release|x64.ActiveCfg = Release|Any CPU
 		{2A99499D-0C3C-40F1-ABFE-884AD2914AD7}.Release|x64.Build.0 = Release|Any CPU
 		{8DA875FC-E9A5-48DF-8794-986834831DF8}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{8DA875FC-E9A5-48DF-8794-986834831DF8}.Debug|Any CPU.Build.0 = Debug|x64
 		{8DA875FC-E9A5-48DF-8794-986834831DF8}.Debug|x64.ActiveCfg = Debug|x64
 		{8DA875FC-E9A5-48DF-8794-986834831DF8}.Debug|x64.Build.0 = Debug|x64
 		{8DA875FC-E9A5-48DF-8794-986834831DF8}.Debug|x64.Deploy.0 = Debug|x64
@@ -77,6 +80,13 @@ Global
 		{509C9F29-FB8F-494E-8845-CAE77F8EE796}.Release|Any CPU.Build.0 = Release|Any CPU
 		{509C9F29-FB8F-494E-8845-CAE77F8EE796}.Release|x64.ActiveCfg = Release|Any CPU
 		{509C9F29-FB8F-494E-8845-CAE77F8EE796}.Release|x64.Build.0 = Release|Any CPU
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Debug|Any CPU.Build.0 = Debug|x64
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Debug|x64.ActiveCfg = Debug|x64
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Debug|x64.Build.0 = Debug|x64
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Release|Any CPU.ActiveCfg = Release|x64
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Release|x64.ActiveCfg = Release|x64
+		{6E519CF2-4C38-4F62-91FE-2DF1DE0C0C3F}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
