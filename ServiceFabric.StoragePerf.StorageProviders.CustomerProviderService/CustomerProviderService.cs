@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Fabric;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.ServiceFabric.Data.Collections;
+﻿using Microsoft.ServiceFabric.Data.Collections;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
-using Microsoft.ServiceFabric.Services.Remoting;
-using Microsoft.ServiceFabric.Services.Remoting.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using ServiceFabric.StoragePerf.Shared;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Fabric;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
 {
@@ -92,10 +89,7 @@ namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
         /// <returns>A collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new ServiceReplicaListener[]
-                {
-                    new ServiceReplicaListener(context => this.CreateServiceRemotingListener(context), "rpcPrimaryEndpoint", false)
-                };
+            return this.CreateServiceReplicaListeners();
         }
 
         /// <summary>
