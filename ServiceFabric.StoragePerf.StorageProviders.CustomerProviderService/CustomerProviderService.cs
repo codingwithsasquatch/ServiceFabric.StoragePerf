@@ -7,17 +7,55 @@ using System.Threading.Tasks;
 using Microsoft.ServiceFabric.Data.Collections;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
+using ServiceFabric.StoragePerf.Shared;
 
 namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
 {
     /// <summary>
     /// An instance of this class is created for each service replica by the Service Fabric runtime.
     /// </summary>
-    internal sealed class CustomerProviderService : StatefulService
+    internal sealed class CustomerProviderService : StatefulService, IStorageProvider
     {
+        private static string DictionaryName = "Customer";
+
         public CustomerProviderService(StatefulServiceContext context)
             : base(context)
         { }
+
+        public Task Add(Customer customer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Clear()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Delete(Customer customer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<Customer> Get(string email)
+        {
+            using (var tx = this.StateManager.CreateTransaction())
+            {
+                var customers = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, Customer>>(DictionaryName);
+                var customer = await customers.TryGetValueAsync(tx, email);
+                return customer.Value;
+            }
+        }
+
+        public Task<StoragePerfMetrics> GetBatch(long batchSize)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Update(Customer customer)
+        {
+            throw new NotImplementedException();
+        }
 
         /// <summary>
         /// Optional override to create listeners (e.g., HTTP, Service Remoting, WCF, etc.) for this service replica to handle client or user requests.
