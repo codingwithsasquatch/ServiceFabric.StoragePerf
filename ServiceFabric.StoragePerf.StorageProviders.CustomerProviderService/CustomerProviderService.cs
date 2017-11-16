@@ -6,8 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceFabric.Data.Collections;
 using Microsoft.ServiceFabric.Services.Communication.Runtime;
+using Microsoft.ServiceFabric.Services.Remoting;
+using Microsoft.ServiceFabric.Services.Remoting.Runtime;
 using Microsoft.ServiceFabric.Services.Runtime;
 using ServiceFabric.StoragePerf.Shared;
+using System.Diagnostics;
 
 namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
 {
@@ -17,6 +20,7 @@ namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
     internal sealed class CustomerProviderService : StatefulService, IStorageProvider
     {
         private static string DictionaryName = "Customer";
+        private static int DatasetSize = 10000;
 
         public CustomerProviderService(StatefulServiceContext context)
             : base(context)
@@ -41,15 +45,37 @@ namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
         {
             using (var tx = this.StateManager.CreateTransaction())
             {
-                var customers = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, Customer>>(DictionaryName);
-                var customer = await customers.TryGetValueAsync(tx, email);
+                var customers = await this.StateManager.TryGetAsync<IReliableDictionary<string, Customer>>(DictionaryName);
+                var customer = await customers.Value.TryGetValueAsync(tx, email);
                 return customer.Value;
             }
         }
 
-        public Task<StoragePerfMetrics> GetBatch(long batchSize)
+        public async Task<StoragePerfMetrics> GetBatch(int batchSize)
         {
-            throw new NotImplementedException();
+            EmailBatchGenerator generator = new EmailBatchGenerator();
+
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
+            var customers = await this.StateManager.TryGetAsync<IReliableDictionary<string, Customer>>(DictionaryName);
+
+            foreach (var email in generator.GetBatch(batchSize, DatasetSize))
+            {
+                using (var tx = this.StateManager.CreateTransaction())
+                {
+                    var customer = (await customers.Value.TryGetValueAsync(tx, email)).Value;
+                }
+            }
+
+            stopwatch.Stop();
+
+            StoragePerfMetrics metrics = new StoragePerfMetrics()
+            {
+                BatchSize = batchSize,
+                ElapsedTime = stopwatch.Elapsed
+            };
+
+            return metrics;
         }
 
         public Task Update(Customer customer)
@@ -66,7 +92,10 @@ namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
         /// <returns>A collection of listeners.</returns>
         protected override IEnumerable<ServiceReplicaListener> CreateServiceReplicaListeners()
         {
-            return new ServiceReplicaListener[0];
+            return new ServiceReplicaListener[]
+                {
+                    new ServiceReplicaListener(context => this.CreateServiceRemotingListener(context), "rpcPrimaryEndpoint", false)
+                };
         }
 
         /// <summary>
@@ -76,31 +105,9 @@ namespace ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService
         /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service replica.</param>
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
-            // TODO: Replace the following sample code with your own logic 
-            //       or remove this RunAsync override if it's not needed in your service.
+            await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>(DictionaryName);
 
-            var myDictionary = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, long>>("myDictionary");
-
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                using (var tx = this.StateManager.CreateTransaction())
-                {
-                    var result = await myDictionary.TryGetValueAsync(tx, "Counter");
-
-                    ServiceEventSource.Current.ServiceMessage(this.Context, "Current Counter Value: {0}",
-                        result.HasValue ? result.Value.ToString() : "Value does not exist.");
-
-                    await myDictionary.AddOrUpdateAsync(tx, "Counter", 0, (key, value) => ++value);
-
-                    // If an exception is thrown before calling CommitAsync, the transaction aborts, all changes are 
-                    // discarded, and nothing is saved to the secondary replicas.
-                    await tx.CommitAsync();
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-            }
+            await base.RunAsync(cancellationToken);
         }
     }
 }
