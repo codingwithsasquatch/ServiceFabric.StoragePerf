@@ -4,24 +4,12 @@
     <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.Combined_MinReplicaSetSize" DefaultValue="3" />
     <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.Combined_PartitionCount" DefaultValue="1" />
     <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.Combined_TargetReplicaSetSize" DefaultValue="3" />
-    <Parameter Name="ServiceFabric.StoragePerf.CustomerService_InstanceCount" DefaultValue="-1" />
-    <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_MinReplicaSetSize" DefaultValue="3" />
-    <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_PartitionCount" DefaultValue="1" />
-    <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_TargetReplicaSetSize" DefaultValue="3" />
   </Parameters>
   <!-- Import the ServiceManifest from the ServicePackage. The ServiceManifestName and ServiceManifestVersion 
        should match the Name and Version attributes of the ServiceManifest element defined in the 
        ServiceManifest.xml file. -->
   <ServiceManifestImport>
     <ServiceManifestRef ServiceManifestName="ServiceFabric.StoragePerf.StorageProviders.CombinedPkg" ServiceManifestVersion="1.0.0" />
-    <ConfigOverrides />
-  </ServiceManifestImport>
-  <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="ServiceFabric.StoragePerf.CustomerServicePkg" ServiceManifestVersion="1.0.0" />
-    <ConfigOverrides />
-  </ServiceManifestImport>
-  <ServiceManifestImport>
-    <ServiceManifestRef ServiceManifestName="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderServicePkg" ServiceManifestVersion="1.0.0" />
     <ConfigOverrides />
   </ServiceManifestImport>
   <DefaultServices>
@@ -33,16 +21,6 @@
     <Service Name="ServiceFabric.StoragePerf.StorageProviders.Combined" ServicePackageActivationMode="ExclusiveProcess">
       <StatefulService ServiceTypeName="ServiceFabric.StoragePerf.StorageProviders.CombinedType" TargetReplicaSetSize="[ServiceFabric.StoragePerf.StorageProviders.Combined_TargetReplicaSetSize]" MinReplicaSetSize="[ServiceFabric.StoragePerf.StorageProviders.Combined_MinReplicaSetSize]">
         <UniformInt64Partition PartitionCount="[ServiceFabric.StoragePerf.StorageProviders.Combined_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
-      </StatefulService>
-    </Service>
-    <Service Name="ServiceFabric.StoragePerf.CustomerService" ServicePackageActivationMode="ExclusiveProcess">
-      <StatelessService ServiceTypeName="ServiceFabric.StoragePerf.CustomerServiceType" InstanceCount="[ServiceFabric.StoragePerf.CustomerService_InstanceCount]">
-        <SingletonPartition />
-      </StatelessService>
-    </Service>
-    <Service Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService" ServicePackageActivationMode="ExclusiveProcess">
-      <StatefulService ServiceTypeName="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderServiceType" TargetReplicaSetSize="[ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_TargetReplicaSetSize]" MinReplicaSetSize="[ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_MinReplicaSetSize]">
-        <UniformInt64Partition PartitionCount="[ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_PartitionCount]" LowKey="-9223372036854775808" HighKey="9223372036854775807" />
       </StatefulService>
     </Service>
   </DefaultServices>

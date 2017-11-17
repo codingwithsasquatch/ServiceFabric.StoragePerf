@@ -57,6 +57,7 @@ namespace ServiceFabric.StoragePerf.StorageProviders.Combined
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
         }
+ #region hideme
 
         public Task Add(Customer customer)
         {
@@ -110,13 +111,15 @@ namespace ServiceFabric.StoragePerf.StorageProviders.Combined
             throw new NotImplementedException();
         }
 
+#endregion
+
         public async Task InitializeDataAsync()
         {
 
-            var customersDic = await this.StateManager.TryGetAsync<IReliableDictionary<string, Customer>>(DictionaryName);
+            var customersDic = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, Customer>>(DictionaryName);
 
             // clear the dictionary first
-            customersDic.Value.ClearAsync().Wait();
+           // customersDic.Value.ClearAsync().Wait();
             
             // fill the collection with a bunch of customers
             for (int x = 0; x < 1000; x++)
@@ -141,7 +144,7 @@ namespace ServiceFabric.StoragePerf.StorageProviders.Combined
                         // Key & value put in temp dictionary (read your own writes),
                         // serialized, redo/undo record is logged & sent to
                         // secondary replicas
-                        await customersDic.Value.AddAsync(tx, newCust.Email, newCust);
+                        await customersDic.AddAsync(tx, newCust.Email, newCust);
 
                         // CommitAsync sends Commit record to log & secondary replicas
                         // After quorum responds, all locks released

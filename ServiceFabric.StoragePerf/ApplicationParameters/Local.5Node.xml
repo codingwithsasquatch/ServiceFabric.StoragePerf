@@ -4,9 +4,5 @@
     <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.Combined_PartitionCount" Value="1" />
     <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.Combined_MinReplicaSetSize" Value="3" />
     <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.Combined_TargetReplicaSetSize" Value="3" />
-    <Parameter Name="ServiceFabric.StoragePerf.CustomerService_InstanceCount" Value="1" />
-    <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_PartitionCount" Value="1" />
-    <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_MinReplicaSetSize" Value="3" />
-    <Parameter Name="ServiceFabric.StoragePerf.StorageProviders.CustomerProviderService_TargetReplicaSetSize" Value="3" />
   </Parameters>
 </Application>
