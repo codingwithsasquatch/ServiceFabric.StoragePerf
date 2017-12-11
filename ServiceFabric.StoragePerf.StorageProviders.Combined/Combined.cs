@@ -16,11 +16,13 @@ namespace ServiceFabric.StoragePerf.StorageProviders.Combined
     /// <summary>
     /// An instance of this class is created for each service replica by the Service Fabric runtime.
     /// </summary>
-    public sealed class Combined : StatefulService, IStorageProvider
+    public sealed class Combined : StatefulService
     {
-        private static string DictionaryName = "Customer";
         private static int DatasetSize = 10000;
-
+        private static int ReadToWriteMultiple = 5; // 5 times more reads than writes
+        private static int RampIntervalCount = 5; //at each interval, the delay between batches decreases
+        private static TimeSpan StartingDelay = TimeSpan.FromSeconds(1);  // the delay between batches
+        private static TimeSpan RampInterval = TimeSpan.FromMinutes(1); // duration spent at each interval
         public Combined(StatefulServiceContext context)
             : base(context)
         { }
@@ -44,123 +46,76 @@ namespace ServiceFabric.StoragePerf.StorageProviders.Combined
         /// <param name="cancellationToken">Canceled when Service Fabric needs to shut down this service replica.</param>
         protected override async Task RunAsync(CancellationToken cancellationToken)
         {
+            // get provider to use from config
+            //ReliableCollectionProvider rcp = new ReliableCollectionProvider(this);
+            var storageProvider = new RedisProvider();
+
             // first, initialize
-            InitializeDataAsync().Wait();
+            //storageProvider.InitializeTestData(DatasetSize).Wait();
+
+            // ramp up to full load by decreasing the delay between batches
+
+            int currentInterval = 0;
 
             while (true)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // TODO: batch size should be dynamically calculated to take a certain 
+                // amount of time, say 2-5 seconds.  The batch size would be different
+                // between storage providers due to the latency inherent in each.
                 int batchSize = 5000;
-                var metric = GetBatch(batchSize).Result;
+                TimeSpan delayThisInterval = new TimeSpan( (StartingDelay.Ticks / RampIntervalCount) * currentInterval);
+
+
+                // handle gets and updates outside of storageproviders using their get and
+                // update interface members.  Keeps it consistant and less code
+                // TODO: probably just put in a base class for storageProviders
+
+                // get list of emails for this batch
+                var emailGenerator = new EmailBatchGenerator();
+                var emails = emailGenerator.GetBatch(batchSize, DatasetSize);
+
+                Random r = new Random();
+                foreach(var email in emails)
+                {
+                    Customer c = storageProvider.Get(email).Result;
+                    
+                    // randomly do an update as frequently as ReadWriteMultiple dictates
+                    if( r.Next(ReadToWriteMultiple) == ReadToWriteMultiple - 1)
+                    {
+                        // do an update on this one
+                        c.FirstName = GetRandomString(10);
+                        storageProvider.Update(c).GetAwaiter().GetResult();
+                    }
+                   
+                }
+
+                var metric = storageProvider.GetBatch(batchSize).Result;
+                metric.NodeName = this.Context.NodeContext.NodeName;
+                metric.TimeCollected = DateTime.Now;
+                
 
                 ServiceEventSource.Current.Message($"Batch Size of {batchSize} took {metric.ElapsedTime.Milliseconds} ms.  ");
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-            }
-        }
- #region hideme
-
-        public Task Add(Customer customer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task Clear()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task Delete(Customer customer)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<Customer> Get(string email)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<StoragePerfMetrics> GetBatch(int batchSize)
-        {
-            EmailBatchGenerator generator = new EmailBatchGenerator();
-
-            Stopwatch stopwatch = Stopwatch.StartNew();
-
-            var customers = await this.StateManager.TryGetAsync<IReliableDictionary<string, Customer>>(DictionaryName);
-
-            foreach (var email in generator.GetBatch(batchSize, DatasetSize))
-            {
-                using (var tx = this.StateManager.CreateTransaction())
-                {
-                    var customer = (await customers.Value.TryGetValueAsync(tx, email)).Value;
-                }
-            }
-
-            stopwatch.Stop();
-
-            StoragePerfMetrics metrics = new StoragePerfMetrics()
-            {
-                BatchSize = batchSize,
-                ElapsedTime = stopwatch.Elapsed
-            };
-
-            return metrics;
-        }
-
-        public Task Update(Customer customer)
-        {
-            throw new NotImplementedException();
-        }
-
-#endregion
-
-        public async Task InitializeDataAsync()
-        {
-
-            var customersDic = await this.StateManager.GetOrAddAsync<IReliableDictionary<string, Customer>>(DictionaryName);
-
-            // clear the dictionary first
-           // customersDic.Value.ClearAsync().Wait();
-            
-            // fill the collection with a bunch of customers
-            for (int x = 0; x < 1000; x++)
-            {
-                // create new random customer
-                var newCust = new Customer
-                {
-                    FirstName = "John",
-                    LastName = "Doe",
-                    Email = $"{x}@constos.com",
-                    State = "ca",
-                    Street = "123 Main St.",
-                    ZipCode = "92648"
-                };
-
-                try
-                {
-                    // Create a new Transaction object for this partition
-                    using (ITransaction tx = base.StateManager.CreateTransaction())
-                    {
-                        // AddAsync takes key's write lock; if >4 secs, TimeoutException
-                        // Key & value put in temp dictionary (read your own writes),
-                        // serialized, redo/undo record is logged & sent to
-                        // secondary replicas
-                        await customersDic.AddAsync(tx, newCust.Email, newCust);
-
-                        // CommitAsync sends Commit record to log & secondary replicas
-                        // After quorum responds, all locks released
-                        await tx.CommitAsync();
-                    }
-                    // If CommitAsync not called, Dispose sends Abort
-                    // record to log & all locks released
-                }
-                catch (TimeoutException)
-                {
-                    //await Task.Delay(100, cancellationToken); goto retry;
-                }
-
+                await Task.Delay(delayThisInterval, cancellationToken);
+                if (currentInterval < 5)
+                    currentInterval++;
             }
         }
 
-      
+        static Random rand = new Random();
+        public const string Alphabet = "abcdefghijklmnopqrstuvwyxzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+
+        static string GetRandomString(int size)
+        {
+            char[] chars = new char[size];
+            for (int i = 0; i<size; i++)
+            {
+                chars[i] = Alphabet[rand.Next(Alphabet.Length)];
+            }
+            return new string (chars);
+        }
+
     }
 }

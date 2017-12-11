@@ -29,10 +29,10 @@
     <None Include="Scripts\Deploy-FabricApplication.ps1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ServiceFabric.StoragePerf.StorageProviders.Combined\ServiceFabric.StoragePerf.StorageProviders.Combined.csproj" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="packages.config" />
+    <ProjectReference Include="..\ServiceFabric.StoragePerf.StorageProviders.Combined\ServiceFabric.StoragePerf.StorageProviders.Combined.csproj" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
   <PropertyGroup>

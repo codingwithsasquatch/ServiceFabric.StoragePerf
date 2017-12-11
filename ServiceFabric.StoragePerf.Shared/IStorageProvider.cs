@@ -10,5 +10,6 @@ namespace ServiceFabric.StoragePerf.Shared
         Task Update(Customer customer);
         Task Delete(Customer customer);
         Task Clear();
+        Task InitializeTestData(int ItemCount);
     }
 }
